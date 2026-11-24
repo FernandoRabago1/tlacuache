@@ -1,0 +1,1055 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Tlacuache</title>
+<!-- app instalable en iPhone (Agregar a inicio) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Tlacuache">
+<meta name="theme-color" content="#FFF3C4">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<style>
+/* fuentes locales: la app funciona sin internet */
+@font-face{font-family:'Lilita One';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/lilita-one.woff2) format('woff2')}
+@font-face{font-family:'Nunito';font-style:normal;font-weight:400 800;font-display:swap;src:url(fonts/nunito.woff2) format('woff2')}
+@font-face{font-family:'Nunito';font-style:italic;font-weight:400;font-display:swap;src:url(fonts/nunito-italic.woff2) format('woff2')}
+/* ---------- tokens ---------- */
+:root{
+  --rosa:#D62F7A;        /* rosa mexicano: acción principal */
+  --rosa-ink:#A3185A;
+  --teal:#0E5E5E;        /* tinta de texto y marcas */
+  --teal-soft:#1F7A78;
+  --mantequilla:#FFF3C4; /* fondo de la app */
+  --crema:#FFFBEC;
+  --oro:#F2B33D;         /* tlacuacoins */
+  --oro-ink:#9C6A0C;
+  --gris:#8A8F99;        /* pelaje */
+  --ink:#1E2A2A;
+  --ink-2:#4C5B5B;
+  --ink-3:#8A9696;
+  --linea:#EAD9A3;
+  --ok:#2E8B57;
+  --alerta:#C7461F;
+  --font-display:'Lilita One', 'Arial Rounded MT Bold', system-ui, sans-serif;
+  --font-body:'Nunito', 'Helvetica Neue', system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  font-family:var(--font-body);
+  color:var(--ink);
+  background:#17302E;
+  background-image:
+    radial-gradient(circle at 20% 10%, rgba(214,47,122,.25), transparent 40%),
+    radial-gradient(circle at 85% 90%, rgba(242,179,61,.18), transparent 45%);
+  min-height:100%;
+  display:flex;align-items:center;justify-content:center;
+  padding:28px 16px;
+  gap:40px;
+  flex-wrap:wrap;
+}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+:focus-visible{outline:3px solid var(--oro);outline-offset:2px}
+
+/* ---------- panel del experimento (fuera del teléfono) ---------- */
+.lab{
+  width:300px;color:#F3EFE2;
+  display:flex;flex-direction:column;gap:18px;
+}
+.lab h1{font:400 38px/1 var(--font-display);margin:0;letter-spacing:.5px}
+.lab h1 small{display:block;font:600 13px/1.4 var(--font-body);color:#B9C9C5;letter-spacing:0;margin-top:6px}
+.lab p{margin:0;font-size:13.5px;line-height:1.5;color:#C9D4D0}
+.lab .seg{display:flex;background:rgba(255,255,255,.08);border-radius:14px;padding:4px;gap:4px}
+.lab .seg button{
+  flex:1;border:0;border-radius:10px;padding:12px 8px;background:transparent;color:#C9D4D0;
+  font:700 14px var(--font-body);transition:background .2s,color .2s;
+}
+.lab .seg button.on{background:#F3EFE2;color:var(--teal)}
+.lab .seg button .v{display:block;font:400 22px/1 var(--font-display);margin-bottom:3px}
+.lab .acts{display:flex;flex-direction:column;gap:8px}
+.lab .acts button{
+  border:1.5px solid rgba(255,255,255,.22);background:transparent;color:#F3EFE2;
+  border-radius:12px;padding:11px 14px;text-align:left;font:600 14px var(--font-body);
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+}
+.lab .acts button:hover{background:rgba(255,255,255,.08)}
+.lab .acts button span{color:#9FB4AE;font-size:12px}
+.lab dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0;font-size:13px}
+.lab dt{color:#9FB4AE}
+.lab dd{margin:0;font-weight:700}
+.lab .note{font-size:12px;color:#8DA09A;border-left:2px solid rgba(255,255,255,.2);padding-left:10px}
+
+/* ---------- iPhone ---------- */
+.phone{
+  width:390px;height:844px;flex:none;
+  background:#0B0B0D;border-radius:58px;padding:11px;
+  box-shadow:0 30px 80px rgba(0,0,0,.55), inset 0 0 0 2px #3A3A40, inset 0 0 0 4px #121214;
+  position:relative;
+}
+.phone::before,.phone::after{content:"";position:absolute;background:#2A2A2E;border-radius:2px}
+.phone::before{left:-3px;top:150px;width:3px;height:34px;box-shadow:0 50px 0 #2A2A2E, 0 100px 0 #2A2A2E}
+.phone::after{right:-3px;top:220px;width:3px;height:80px}
+.screen{
+  width:100%;height:100%;border-radius:48px;overflow:hidden;
+  background:var(--mantequilla);position:relative;display:flex;flex-direction:column;
+}
+.island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:122px;height:35px;background:#000;border-radius:20px;z-index:30}
+.statusbar{height:54px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 30px 6px;font:700 15px var(--font-body);color:var(--ink);flex:none}
+.statusbar .icons{display:flex;gap:6px;align-items:center}
+.statusbar svg{height:12px;width:auto}
+.home-ind{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:var(--ink);opacity:.85;z-index:30}
+
+.content{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;padding:6px 20px 110px;position:relative}
+.content::-webkit-scrollbar{display:none}
+.view{display:none}
+.view.on{display:block}
+
+/* tab bar */
+.tabbar{
+  position:absolute;bottom:0;left:0;right:0;height:88px;padding:8px 10px 24px;
+  background:rgba(255,251,236,.92);backdrop-filter:blur(14px);
+  border-top:1px solid var(--linea);display:flex;z-index:20;
+}
+.tabbar button{
+  flex:1;border:0;background:none;color:var(--ink-3);display:flex;flex-direction:column;align-items:center;gap:3px;
+  font:700 10.5px var(--font-body);padding:4px 0;
+}
+.tabbar button svg{width:26px;height:26px}
+.tabbar button.on{color:var(--rosa)}
+
+/* headers */
+.h{font:400 30px/1.05 var(--font-display);color:var(--teal);margin:8px 0 2px}
+.sub{font-size:13.5px;color:var(--ink-2);margin:0 0 14px}
+.h.row{display:flex;justify-content:space-between;align-items:baseline}
+
+/* chips & badges */
+.coins{
+  display:inline-flex;align-items:center;gap:6px;background:var(--crema);border:1.5px solid var(--oro);
+  color:var(--oro-ink);border-radius:999px;padding:6px 12px 6px 8px;font:800 14px var(--font-body);
+}
+.coins .c{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#FFE08A,var(--oro) 60%,#C98A1B);box-shadow:inset 0 0 0 2px rgba(255,255,255,.35);display:inline-block}
+.pill{display:inline-block;border-radius:999px;padding:3px 9px;font:800 11px var(--font-body);letter-spacing:.2px}
+.pill.premium{background:var(--teal);color:#FFF3C4}
+.pill.free{background:#E7E0C6;color:var(--ink-2)}
+.lock{display:inline-flex;align-items:center;gap:5px;color:var(--ink-3);font-weight:700;font-size:12px}
+
+/* ---------- Home ---------- */
+.stage{
+  position:relative;margin:6px -4px 0;border-radius:28px;overflow:hidden;
+  background:linear-gradient(180deg,#FFE9A6 0%, #FFD98A 70%, #B9D6B2 70%, #A8CCA0 100%);
+  height:290px;
+}
+.stage .ground{position:absolute;left:0;right:0;bottom:0;height:30%}
+.stage .sun{position:absolute;width:70px;height:70px;border-radius:50%;background:var(--oro);right:26px;top:22px;opacity:.9}
+.stage .cloud{position:absolute;background:#FFFBEC;border-radius:999px;opacity:.9}
+.stage .mood{position:absolute;left:14px;top:12px;background:rgba(255,251,236,.9);border-radius:14px;padding:8px 12px;max-width:190px;font-size:13px;line-height:1.35;color:var(--ink)}
+.stage .mood b{display:block;font:400 17px/1 var(--font-display);color:var(--rosa-ink);margin-bottom:2px}
+.tlacuache{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);width:230px;height:230px;transform-origin:50% 100%}
+.tlacuache.feliz{animation:bounce 1.6s ease-in-out infinite}
+.tlacuache.hambriento{animation:shiver .9s ease-in-out infinite}
+.tlacuache.aletargado{animation:slump 3.2s ease-in-out infinite}
+@keyframes bounce{0%,100%{transform:translateX(-50%) scaleY(1)}50%{transform:translateX(-50%) translateY(-6px) scaleY(1.02)}}
+@keyframes shiver{0%,100%{transform:translateX(-50%) rotate(-1deg)}50%{transform:translateX(-50%) rotate(1deg)}}
+@keyframes slump{0%,100%{transform:translateX(-50%) scaleX(1) scaleY(1)}50%{transform:translateX(-50%) scaleX(1.02) scaleY(.98)}}
+@media (prefers-reduced-motion:reduce){.tlacuache{animation:none!important}}
+.zzz{font:400 20px var(--font-display);fill:var(--teal);opacity:0}
+.aletargado .zzz{opacity:1;animation:float 2.4s linear infinite}
+.aletargado .zzz:nth-child(2){animation-delay:.8s}
+.aletargado .zzz:nth-child(3){animation-delay:1.6s}
+@keyframes float{0%{transform:translateY(0);opacity:0}30%{opacity:1}100%{transform:translateY(-28px);opacity:0}}
+
+.macros{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.macro{background:var(--crema);border-radius:18px;padding:10px 8px 10px;text-align:center;border:1px solid var(--linea)}
+.macro .ring{width:54px;height:54px;margin:0 auto 6px;position:relative}
+.macro .ring svg{transform:rotate(-90deg)}
+.macro .ring .val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:800 12px var(--font-body);color:var(--ink)}
+.macro .name{font-weight:800;font-size:12px}
+.macro .goal{font-size:11px;color:var(--ink-3)}
+
+.card{background:var(--crema);border:1px solid var(--linea);border-radius:20px;padding:14px 16px;margin-top:12px}
+.card h3{margin:0 0 4px;font:400 18px var(--font-display);color:var(--teal)}
+.card p{margin:0;font-size:13px;color:var(--ink-2);line-height:1.45}
+/* moneda de hoy: retos claros */
+.quest-h{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.quest-h h3{margin:0}
+.quest-h .coins{flex:none}
+.quest .lead{margin:4px 0 10px}
+.quest .prog{height:10px;background:#F1E7C3;border-radius:5px;overflow:hidden;margin-bottom:4px}
+.quest .prog i{display:block;height:100%;background:var(--oro);border-radius:5px;transition:width .4s}
+.quest .q{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--linea)}
+.quest .q:last-of-type{border-bottom:0}
+.quest .ck{width:26px;height:26px;border-radius:50%;flex:none;border:2px solid #D9CFAE;display:flex;align-items:center;justify-content:center;font:800 14px var(--font-body);color:transparent}
+.quest .q.ok .ck{background:var(--ok);border-color:var(--ok);color:#fff}
+.quest .q.bad .ck{background:var(--alerta);border-color:var(--alerta);color:#fff}
+.quest .q .t{flex:1;min-width:0}
+.quest .q .t b{display:block;font-size:14px}
+.quest .q .t span{font-size:12px;color:var(--ink-2)}
+.quest .q .st{font:800 12px var(--font-body);color:var(--ink-3);text-align:right;white-space:nowrap}
+.quest .q.ok .st{color:var(--ok)}
+.quest .q.bad .st{color:var(--alerta)}
+.quest .btn{margin-top:12px}
+.quest .btn.gold{box-shadow:0 6px 16px rgba(242,179,61,.45)}
+.quest .foot{margin-top:8px;font-size:12px;color:var(--ink-3);text-align:center}
+.card.steps{display:flex;align-items:center;gap:14px}
+.card.steps .big{font:400 28px/1 var(--font-display);color:var(--teal)}
+.card.steps .big small{font:700 12px var(--font-body);color:var(--ink-3);margin-left:4px}
+
+.btn{
+  border:0;border-radius:14px;padding:13px 16px;font:800 15px var(--font-body);
+  background:var(--rosa);color:#fff;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:transform .08s;
+}
+.btn:active{transform:scale(.98)}
+.btn.ghost{background:transparent;color:var(--teal);border:1.5px solid var(--teal)}
+.btn.small{width:auto;padding:9px 14px;font-size:13px;border-radius:11px}
+.btn.gold{background:var(--oro);color:var(--ink)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+.log{margin-top:14px}
+.log .item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--linea)}
+.log .item:last-child{border-bottom:0}
+.log .ico{width:36px;height:36px;border-radius:12px;background:#FFE7A1;display:flex;align-items:center;justify-content:center;font-size:18px;flex:none}
+.log .t{flex:1;min-width:0}
+.log .t b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.log .t span{font-size:12px;color:var(--ink-3)}
+.log .k{font:800 14px var(--font-body);color:var(--teal)}
+.log .x{border:0;background:none;color:var(--ink-3);font-size:18px;padding:4px}
+.empty{text-align:center;color:var(--ink-3);font-size:13px;padding:18px 10px}
+
+/* ---------- Registro ---------- */
+.search{position:relative;margin-top:6px}
+.search input{
+  width:100%;border:1.5px solid var(--linea);background:var(--crema);border-radius:16px;padding:14px 14px 14px 44px;
+  font:600 15px var(--font-body);color:var(--ink);
+}
+.search input::placeholder{color:var(--ink-3)}
+.search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:20px;height:20px;color:var(--ink-3)}
+.src{font-size:11.5px;color:var(--ink-3);margin:6px 2px 0}
+.results{margin-top:10px}
+.results .r{
+  width:100%;text-align:left;border:0;background:var(--crema);border-radius:14px;padding:11px 12px;margin-bottom:6px;
+  display:flex;align-items:center;gap:10px;color:var(--ink);
+}
+.results .r .ico{font-size:22px;width:32px;text-align:center}
+.results .r b{display:block;font-size:14px}
+.results .r span{font-size:12px;color:var(--ink-3)}
+.results .r .k{margin-left:auto;font:800 13px var(--font-body);color:var(--teal);white-space:nowrap}
+.ways{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.way{
+  border:1.5px solid var(--linea);background:var(--crema);border-radius:18px;padding:14px 12px;text-align:left;color:var(--ink);
+  display:flex;flex-direction:column;gap:6px;position:relative;
+}
+.way .ic{font-size:26px}
+.way b{font-size:14px}
+.way span{font-size:12px;color:var(--ink-2);line-height:1.3}
+.way.prem{grid-column:1/-1;border-color:var(--teal);background:#E6F0EC}
+.way .tag{position:absolute;right:10px;top:10px}
+
+/* scanner / camera overlay */
+.cam{
+  position:absolute;inset:0;background:#0d1412;z-index:40;display:none;flex-direction:column;color:#EAF2EE;
+}
+.cam.on{display:flex}
+.cam .top{padding:60px 20px 10px;display:flex;justify-content:space-between;align-items:center;font-weight:700}
+.cam .top button{border:0;background:rgba(255,255,255,.12);color:#fff;border-radius:999px;padding:8px 14px;font-weight:800}
+.cam .vf{flex:1;position:relative;margin:10px 26px;border-radius:22px;overflow:hidden;
+  background:
+    radial-gradient(ellipse at 50% 60%, #3f5a52 0%, #1d2b27 60%, #0e1513 100%);}
+.cam .vf::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,0,0,.08) 3px 4px)}
+.cam .frame{position:absolute;left:12%;right:12%;top:30%;height:36%;border-radius:14px;
+  box-shadow:0 0 0 2px rgba(255,255,255,.75)}
+.cam .frame.photo{left:8%;right:8%;top:14%;height:62%;border-radius:20px}
+.cam .laser{position:absolute;left:12%;right:12%;top:30%;height:2px;background:var(--rosa);box-shadow:0 0 12px var(--rosa);animation:laser 1.6s ease-in-out infinite}
+@keyframes laser{0%,100%{top:32%}50%{top:62%}}
+.cam .hint{text-align:center;font-size:13px;color:#B8C8C2;padding:8px 20px}
+.cam .shutter{align-self:center;margin:8px 0 40px;width:68px;height:68px;border-radius:50%;background:#fff;border:5px solid rgba(255,255,255,.4);background-clip:padding-box}
+.cam .result{position:absolute;left:20px;right:20px;bottom:120px;background:#FFFBEC;color:var(--ink);border-radius:18px;padding:14px;display:none}
+.cam .result.on{display:block}
+.cam .result b{font:400 18px var(--font-display);color:var(--teal);display:block}
+.cam .result span{font-size:13px;color:var(--ink-2)}
+.cam .result .row{display:flex;gap:8px;margin-top:10px}
+.cam .dish{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:110px;filter:drop-shadow(0 10px 20px rgba(0,0,0,.4))}
+.cam .bar{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);display:flex;gap:3px;align-items:flex-end;height:60px;opacity:.9}
+.cam .bar i{display:block;background:#EAF2EE;height:100%}
+
+/* ---------- Tienda ---------- */
+.shop{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.itm{
+  background:var(--crema);border:1.5px solid var(--linea);border-radius:18px;padding:12px 8px 10px;text-align:center;position:relative;
+}
+.itm .pic{height:54px;display:flex;align-items:center;justify-content:center}
+.itm .pic svg{width:54px;height:54px}
+.itm b{display:block;font-size:13px;margin-top:4px}
+.itm .pr{font:800 12px var(--font-body);color:var(--oro-ink);margin:2px 0 8px;display:flex;justify-content:center;align-items:center;gap:4px}
+.itm .pr .c{width:11px;height:11px;border-radius:50%;background:var(--oro);display:inline-block}
+.itm button{width:100%;border:0;border-radius:10px;padding:8px 4px;font:800 12px var(--font-body);background:var(--rosa);color:#fff}
+.itm button.own{background:#E7E0C6;color:var(--ink-2)}
+.itm button.eq{background:var(--teal);color:#FFF3C4}
+.itm.locked{opacity:.75}
+.itm.locked button{background:#E7E0C6;color:var(--ink-2)}
+.itm .tag{position:absolute;left:8px;top:8px}
+.shop-h{margin-top:18px;font:400 18px var(--font-display);color:var(--teal);display:flex;align-items:center;gap:8px}
+
+/* ---------- Estadísticas ---------- */
+.segc{display:flex;background:#F1E7C3;border-radius:12px;padding:3px;margin-top:8px}
+.segc button{flex:1;border:0;background:transparent;border-radius:9px;padding:8px 6px;font:800 13px var(--font-body);color:var(--ink-2)}
+.segc button.on{background:var(--crema);color:var(--teal);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.segc.mini button{padding:6px 4px;font-size:12px}
+.today{margin-top:12px}
+.bar-row{display:grid;grid-template-columns:78px 1fr 64px;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--linea)}
+.bar-row:last-child{border-bottom:0}
+.bar-row .n{font-weight:800;font-size:13px}
+.bar-row .track{height:12px;background:#F1E7C3;border-radius:6px;overflow:hidden}
+.bar-row .fill{height:100%;border-radius:6px;background:var(--teal-soft);transition:width .4s}
+.bar-row .fill.over{background:var(--alerta)}
+.bar-row .v{font-size:12px;color:var(--ink-2);text-align:right;font-variant-numeric:tabular-nums}
+.reset-note{font-size:12px;color:var(--ink-3);margin-top:10px;display:flex;gap:6px;align-items:center}
+.chart-wrap{position:relative;margin-top:10px}
+.chart-wrap svg{width:100%;height:auto;display:block}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:#FFF3C4;border-radius:10px;padding:7px 10px;font-size:12px;line-height:1.35;display:none;z-index:5;white-space:nowrap;transform:translate(-50%,-110%)}
+.tip b{display:block;font-size:13px}
+.kpis{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.kpi{background:var(--crema);border:1px solid var(--linea);border-radius:14px;padding:10px}
+.kpi .v{font:400 22px/1 var(--font-display);color:var(--teal)}
+.kpi .l{font-size:11.5px;color:var(--ink-3);margin-top:3px}
+.paywall-inline{
+  margin-top:14px;border-radius:20px;background:var(--teal);color:#FFF3C4;padding:16px;position:relative;overflow:hidden;
+}
+.paywall-inline h3{margin:0 0 4px;font:400 20px var(--font-display)}
+.paywall-inline p{margin:0 0 12px;font-size:13px;opacity:.9;line-height:1.4}
+.paywall-inline .btn{background:var(--oro);color:var(--ink)}
+.blur-chart{filter:blur(4px);opacity:.55;pointer-events:none}
+
+/* ---------- sheet (paywall) ---------- */
+.sheet-bg{position:absolute;inset:0;background:rgba(20,30,28,.45);z-index:50;display:none}
+.sheet-bg.on{display:block}
+.sheet{
+  position:absolute;left:0;right:0;bottom:0;background:var(--crema);border-radius:30px 30px 0 0;padding:14px 22px 44px;z-index:51;
+  transform:translateY(100%);transition:transform .32s cubic-bezier(.2,.8,.2,1);
+}
+.sheet.on{transform:none}
+.sheet .grab{width:40px;height:5px;border-radius:3px;background:#D9CFAE;margin:0 auto 14px}
+.sheet h2{font:400 28px/1.05 var(--font-display);color:var(--teal);margin:0 0 4px}
+.sheet p{margin:0 0 14px;font-size:13.5px;color:var(--ink-2)}
+.sheet ul{list-style:none;padding:0;margin:0 0 16px;display:flex;flex-direction:column;gap:9px}
+.sheet li{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.sheet li .ic{width:30px;height:30px;border-radius:10px;background:#E6F0EC;display:flex;align-items:center;justify-content:center;flex:none;font-size:16px}
+.sheet li b{display:block}
+.sheet li span{font-size:12.5px;color:var(--ink-2)}
+.sheet .price{text-align:center;font-size:12.5px;color:var(--ink-3);margin-top:10px}
+
+/* toast */
+.toast{
+  position:absolute;left:50%;top:70px;transform:translate(-50%,-20px);background:var(--ink);color:#FFF3C4;border-radius:14px;padding:10px 16px;
+  font:700 13px var(--font-body);opacity:0;transition:.25s;z-index:60;pointer-events:none;max-width:320px;text-align:center;
+}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* reward overlay */
+.reward{position:absolute;inset:0;z-index:55;background:rgba(255,243,196,.96);display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px}
+.reward.on{display:flex}
+.reward .big{font:400 44px/1 var(--font-display);color:var(--rosa-ink)}
+.reward .coin{width:90px;height:90px;border-radius:50%;margin:16px 0;background:radial-gradient(circle at 35% 35%,#FFE08A,var(--oro) 60%,#C98A1B);box-shadow:0 10px 30px rgba(156,106,12,.35)}
+.reward p{color:var(--ink-2);font-size:14px;margin:4px 0 20px}
+
+.demo-btn,.lab-close{display:none}
+
+/* ---------- modo app: en un teléfono real la app ocupa toda la pantalla ---------- */
+@media (max-width:600px){
+  html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+  body{display:block;padding:0;position:fixed;inset:0;background:var(--mantequilla);background-image:none;
+    -webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+  button{touch-action:manipulation;-webkit-user-select:none;user-select:none}
+  .phone{width:100%;height:100%;border-radius:0;padding:0;box-shadow:none;background:var(--mantequilla)}
+  .phone::before,.phone::after{display:none}
+  .screen{border-radius:0}
+  .island,.statusbar,.home-ind{display:none}
+  .content{padding-top:calc(env(safe-area-inset-top) + 12px);padding-bottom:calc(92px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+  .tabbar{height:calc(66px + env(safe-area-inset-bottom));padding:8px 10px env(safe-area-inset-bottom)}
+  .cam .top{padding-top:calc(env(safe-area-inset-top) + 18px)}
+  .cam .shutter{margin-bottom:calc(28px + env(safe-area-inset-bottom))}
+  .sheet{padding-bottom:calc(28px + env(safe-area-inset-bottom))}
+  .toast{top:calc(env(safe-area-inset-top) + 16px);width:max-content;max-width:calc(100% - 32px)}
+  .search input{font-size:16px} /* evita el zoom de iOS al enfocar */
+
+  /* el panel del experimento se vuelve un panel de demo oculto tras el engrane */
+  .demo-btn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;
+    border:1.5px solid var(--linea);background:var(--crema);color:var(--teal);padding:0}
+  .demo-btn svg{width:19px;height:19px}
+  .lab{display:none;position:fixed;inset:0;z-index:100;width:auto;background:#17302E;overflow-y:auto;
+    padding:calc(env(safe-area-inset-top) + 22px) 22px calc(env(safe-area-inset-bottom) + 26px)}
+  .lab.on{display:flex}
+  .lab-close{display:block;align-self:flex-end;border:0;background:rgba(255,255,255,.12);color:#fff;border-radius:999px;padding:9px 16px;font:800 14px var(--font-body)}
+  .lab .acts button,.lab .seg button{padding-top:14px;padding-bottom:14px}
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== Panel del experimento ===================== -->
+<aside class="lab" id="lab">
+  <button class="lab-close" onclick="closeLab()">Cerrar</button>
+  <h1>Tlacuache<small>Experimento A/B · prototipo navegable</small></h1>
+  <p>Cambia de variante para ver qué recibe cada grupo. El estado del tlacuache, las monedas y el registro se guardan en este navegador.</p>
+  <div class="seg" role="group" aria-label="Variante">
+    <button id="varA" class="on" onclick="setVariant('free')"><span class="v">A</span>Free</button>
+    <button id="varB" onclick="setVariant('premium')"><span class="v">B</span>Premium</button>
+  </div>
+  <dl>
+    <dt>Día simulado</dt><dd id="labDay">—</dd>
+    <dt>Estado</dt><dd id="labMood">—</dd>
+    <dt>Tlacuacoins</dt><dd id="labCoins">0</dd>
+    <dt>Racha</dt><dd id="labStreak">0 días</dd>
+  </dl>
+  <div class="acts">
+    <button onclick="rollover(true)">Simular las 12:00 am <span>cierra el día</span></button>
+    <button onclick="fillDemo()">Llenar un día de ejemplo <span>registra comidas</span></button>
+    <button onclick="resetAll()">Reiniciar todo <span>borra datos</span></button>
+  </div>
+  <p class="note">La búsqueda usa una base local que imita la respuesta de FatSecret / Edamam. El escáner, la foto y el podómetro están simulados para la prueba.</p>
+</aside>
+
+<!-- ===================== iPhone ===================== -->
+<div class="phone">
+  <div class="screen" id="screen">
+    <div class="island"></div>
+    <div class="statusbar">
+      <span id="clock">9:41</span>
+      <span class="icons">
+        <svg viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx=".6"/><rect x="5" y="5.5" width="3" height="6.5" rx=".6"/><rect x="10" y="3" width="3" height="9" rx=".6"/><rect x="15" y="0" width="3" height="12" rx=".6"/></svg>
+        <svg viewBox="0 0 16 12" fill="currentColor"><path d="M8 9.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM4.5 7.2a5 5 0 0 1 7 0l-1.3 1.3a3.2 3.2 0 0 0-4.4 0zM1.5 4.3a9.2 9.2 0 0 1 13 0l-1.3 1.3a7.4 7.4 0 0 0-10.4 0z"/></svg>
+        <svg viewBox="0 0 27 12" fill="none" stroke="currentColor"><rect x=".5" y=".5" width="22" height="11" rx="3"/><rect x="2.5" y="2.5" width="16" height="7" rx="1.5" fill="currentColor" stroke="none"/><path d="M24.5 4v4a2 2 0 0 0 0-4z" fill="currentColor" stroke="none"/></svg>
+      </span>
+    </div>
+
+    <div class="content" id="content">
+
+      <!-- ---------- HOME ---------- -->
+      <section class="view on" id="v-home">
+        <div class="h row">
+          <span>Hola, <span id="userName">Emilio</span></span>
+          <span style="display:flex;align-items:center;gap:8px">
+            <span class="coins"><i class="c"></i><span id="coinsHome">0</span></span>
+            <button class="demo-btn" aria-label="Panel de demo" onclick="openLab()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+          </span>
+        </div>
+        <p class="sub"><span id="planPill" class="pill free">Plan Free</span> <span id="dateLabel"></span></p>
+
+        <div class="stage">
+          <div class="sun"></div>
+          <div class="cloud" style="width:70px;height:22px;left:30px;top:60px"></div>
+          <div class="cloud" style="width:46px;height:16px;left:120px;top:36px"></div>
+          <div class="mood" id="moodBox"><b>Hambriento</b>Aún no le das de comer hoy.</div>
+          <svg class="tlacuache hambriento" id="tlacuache" viewBox="0 0 220 230" aria-label="Tlacuache">
+            <!-- capa (premium) va detrás -->
+            <g class="acc acc-capa" style="display:none">
+              <path d="M58 150 q52 -30 104 0 l14 70 q-66 20 -132 0z" fill="#D62F7A"/>
+              <path d="M66 152 q44 -22 88 0 l10 60 q-54 14 -108 0z" fill="#F4A5B8" opacity=".6"/>
+            </g>
+            <!-- cola -->
+            <path d="M152 176 q46 8 48 -34" stroke="#D9AFAA" stroke-width="10" fill="none" stroke-linecap="round"/>
+            <!-- patas -->
+            <ellipse cx="80" cy="212" rx="15" ry="8" fill="#D9AFAA"/>
+            <ellipse cx="140" cy="212" rx="15" ry="8" fill="#D9AFAA"/>
+            <!-- cuerpo -->
+            <ellipse class="body" id="body" cx="110" cy="172" rx="58" ry="44" fill="#8A8F99"/>
+            <ellipse id="belly" cx="110" cy="180" rx="36" ry="28" fill="#EDE9E0"/>
+            <!-- manitas -->
+            <ellipse cx="70" cy="180" rx="11" ry="8" fill="#D9AFAA" transform="rotate(-20 70 180)"/>
+            <ellipse cx="150" cy="180" rx="11" ry="8" fill="#D9AFAA" transform="rotate(20 150 180)"/>
+            <!-- bufanda -->
+            <g class="acc acc-bufanda" style="display:none">
+              <path d="M66 140 q44 26 88 0 l0 14 q-44 26 -88 0z" fill="#D62F7A"/>
+              <path d="M136 148 l14 34 l16 -6 l-10 -36z" fill="#D62F7A"/>
+              <path d="M70 146 q40 22 80 0" stroke="#F4A5B8" stroke-width="3" fill="none"/>
+            </g>
+            <!-- orejas -->
+            <circle cx="60" cy="62" r="25" fill="#3F3F46"/><circle cx="60" cy="62" r="15" fill="#F4A5B8"/>
+            <circle cx="160" cy="62" r="25" fill="#3F3F46"/><circle cx="160" cy="62" r="15" fill="#F4A5B8"/>
+            <!-- cabeza -->
+            <ellipse cx="110" cy="104" rx="54" ry="48" fill="#8A8F99"/>
+            <path d="M66 104 q44 -78 88 0 q-4 54 -44 58 q-40 -4 -44 -58z" fill="#F7F4EE"/>
+            <!-- parches de ojos -->
+            <ellipse cx="88" cy="96" rx="14" ry="16" fill="#3F3F46"/>
+            <ellipse cx="132" cy="96" rx="14" ry="16" fill="#3F3F46"/>
+            <!-- ojos -->
+            <g id="eyes"></g>
+            <!-- nariz y boca -->
+            <ellipse cx="110" cy="134" rx="10" ry="7" fill="#E8628A"/>
+            <path id="mouth" d="M98 150 q12 -8 24 0" stroke="#3F3F46" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <!-- rubor feliz -->
+            <g id="blush" style="display:none"><ellipse cx="74" cy="122" rx="8" ry="4" fill="#F4A5B8"/><ellipse cx="146" cy="122" rx="8" ry="4" fill="#F4A5B8"/></g>
+            <!-- gota hambriento -->
+            <path id="drop" d="M150 72 q8 12 0 18 q-8 -6 0 -18z" fill="#7FB3E0" style="display:none"/>
+            <!-- zzz -->
+            <g id="zzz"><text class="zzz" x="156" y="60">z</text><text class="zzz" x="168" y="48">z</text><text class="zzz" x="180" y="36">z</text></g>
+            <!-- lentes -->
+            <g class="acc acc-lentes" style="display:none" fill="none" stroke="#1E2A2A" stroke-width="3.5">
+              <circle cx="88" cy="96" r="17" fill="rgba(31,122,120,.18)"/><circle cx="132" cy="96" r="17" fill="rgba(31,122,120,.18)"/>
+              <path d="M105 96 h10 M71 94 l-14 -4 M149 94 l14 -4"/>
+            </g>
+            <!-- gorra -->
+            <g class="acc acc-gorra" style="display:none">
+              <path d="M62 68 q48 -52 96 0 l0 8 q-48 -14 -96 0z" fill="#0E5E5E"/>
+              <path d="M150 70 l40 6 q-2 10 -14 10 l-26 -6z" fill="#0E5E5E"/>
+              <path d="M66 74 q44 -14 88 0" stroke="#1F7A78" stroke-width="4" fill="none"/>
+              <circle cx="110" cy="38" r="5" fill="#F2B33D"/>
+            </g>
+            <!-- sombrero charro (premium) -->
+            <g class="acc acc-sombrero" style="display:none">
+              <ellipse cx="110" cy="62" rx="88" ry="20" fill="#1E2A2A"/>
+              <ellipse cx="110" cy="58" rx="80" ry="15" fill="#2E3A3A"/>
+              <path d="M74 60 q8 -44 36 -46 q28 2 36 46z" fill="#1E2A2A"/>
+              <path d="M78 54 q32 -8 64 0" stroke="#F2B33D" stroke-width="4" fill="none"/>
+              <path d="M34 62 q76 18 152 0" stroke="#F2B33D" stroke-width="2.5" fill="none"/>
+            </g>
+            <!-- corona (premium) -->
+            <g class="acc acc-corona" style="display:none">
+              <path d="M76 70 l0 -30 l16 16 l18 -26 l18 26 l16 -16 l0 30z" fill="#F2B33D" stroke="#9C6A0C" stroke-width="2"/>
+              <circle cx="92" cy="40" r="4" fill="#D62F7A"/><circle cx="110" cy="30" r="4" fill="#0E5E5E"/><circle cx="128" cy="40" r="4" fill="#D62F7A"/>
+            </g>
+          </svg>
+        </div>
+
+        <div class="macros" id="macros"></div>
+
+        <div class="card quest" id="economyCard"></div>
+
+        <div class="card steps" id="stepsCard"></div>
+
+        <div class="log" id="homeLog"></div>
+      </section>
+
+      <!-- ---------- REGISTRO ---------- -->
+      <section class="view" id="v-registro">
+        <div class="h">Registrar comida</div>
+        <p class="sub">Busca por nombre o usa la cámara.</p>
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="q" type="search" placeholder="Ej. tacos, avena, pozole…" autocomplete="off" oninput="search(this.value)">
+        </div>
+        <p class="src">Resultados de la base de alimentos (API gratuita)</p>
+        <div class="results" id="results"></div>
+        <div class="ways">
+          <button class="way" onclick="openScanner()"><span class="ic">▥</span><b>Escanear código</b><span>Productos empacados con código de barras.</span></button>
+          <button class="way" onclick="goTab('home')"><span class="ic">🍽</span><b>Ver lo de hoy</b><span>Lo que ya registraste.</span></button>
+          <button class="way prem" id="photoWay" onclick="openPhoto()">
+            <span class="ic">📷</span><b>Reconocer por foto</b><span>Tómale foto al plato y el tlacuache adivina qué es y cuánto pesa.</span>
+            <span class="tag pill premium">Premium</span>
+          </button>
+        </div>
+        <div class="log" id="regLog"></div>
+      </section>
+
+      <!-- ---------- TIENDA ---------- -->
+      <section class="view" id="v-tienda">
+        <div class="h row"><span>Tienda</span><span class="coins"><i class="c"></i><span id="coinsShop">0</span></span></div>
+        <p class="sub">Completa los 4 retos del día y gana tlacuacoins para gastar aquí.</p>
+        <div class="shop-h">Accesorios</div>
+        <div class="shop" id="shopFree"></div>
+        <div class="shop-h">Accesorios premium <span class="pill premium">Premium</span></div>
+        <div class="shop" id="shopPrem"></div>
+        <div id="shopUpsell"></div>
+      </section>
+
+      <!-- ---------- ESTADÍSTICAS ---------- -->
+      <section class="view" id="v-stats">
+        <div class="h">Estadísticas</div>
+        <p class="sub" id="statsSub">Lo que llevas hoy.</p>
+        <div class="segc" id="statsSeg">
+          <button class="on" data-r="hoy" onclick="setRange('hoy')">Hoy</button>
+          <button data-r="semana" onclick="setRange('semana')">Semana</button>
+          <button data-r="mes" onclick="setRange('mes')">Mes</button>
+        </div>
+        <div id="statsBody"></div>
+      </section>
+
+    </div>
+
+    <!-- tab bar -->
+    <nav class="tabbar">
+      <button class="on" data-t="home" onclick="goTab('home')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Tlacuache
+      </button>
+      <button data-t="registro" onclick="goTab('registro')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Registrar
+      </button>
+      <button data-t="tienda" onclick="goTab('tienda')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 8h16l-1 12H5zM9 8V6a3 3 0 0 1 6 0v2"/></svg>Tienda
+      </button>
+      <button data-t="stats" onclick="goTab('stats')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>Estadísticas
+      </button>
+    </nav>
+    <div class="home-ind"></div>
+
+    <!-- cámara -->
+    <div class="cam" id="cam">
+      <div class="top"><span id="camTitle">Escanear código</span><button onclick="closeCam()">Cerrar</button></div>
+      <div class="vf">
+        <div class="frame" id="camFrame"></div>
+        <div class="laser" id="laser"></div>
+        <div class="bar" id="camBar"></div>
+        <div class="dish" id="camDish"></div>
+      </div>
+      <p class="hint" id="camHint">Centra el código de barras dentro del marco.</p>
+      <button class="shutter" id="shutter" aria-label="Capturar" onclick="capture()"></button>
+      <div class="result" id="camResult"></div>
+    </div>
+
+    <!-- paywall -->
+    <div class="sheet-bg" id="sheetBg" onclick="closeSheet()"></div>
+    <div class="sheet" id="sheet">
+      <div class="grab"></div>
+      <h2>Tlacuache Premium</h2>
+      <p>Lo que la variante B recibe desde el primer día.</p>
+      <ul>
+        <li><span class="ic">📷</span><div><b>Reconocer comida por foto</b><span>El gancho principal: sin buscar ni teclear.</span></div></li>
+        <li><span class="ic">👟</span><div><b>Pasos del celular</b><span>Sincroniza el podómetro y ajusta tus calorías.</span></div></li>
+        <li><span class="ic">✕2</span><div><b>Monedas al doble</b><span>20 tlacuacoins por día cumplido y accesorios exclusivos.</span></div></li>
+        <li><span class="ic">📈</span><div><b>Historial semanal y mensual</b><span>Con gráfica, no solo el día de hoy.</span></div></li>
+      </ul>
+      <button class="btn gold" onclick="subscribe()">Activar Premium</button>
+      <p class="price">$49 MXN al mes · cancela cuando quieras</p>
+    </div>
+
+    <!-- recompensa -->
+    <div class="reward" id="reward">
+      <div class="big">¡Día cumplido!</div>
+      <div class="coin"></div>
+      <div class="big" id="rewardAmt">+10</div>
+      <p id="rewardTxt">Tu tlacuache comió justo lo que necesitaba.</p>
+      <button class="btn" style="max-width:220px" onclick="closeReward()">Seguir</button>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
+</div>
+
+<script>
+/* =============================== datos =============================== */
+const GOALS = { kcal:2000, p:120, c:250, f:65 };
+const FOODS = [
+  {n:'Tacos al pastor (orden de 3)', k:420, p:22, c:36, f:20, i:'🌮', dish:1},
+  {n:'Tortilla de maíz (1 pieza)', k:52, p:1, c:11, f:1, i:'🫓'},
+  {n:'Huevos revueltos (2)', k:180, p:12, c:2, f:14, i:'🍳'},
+  {n:'Frijoles de la olla (1 taza)', k:220, p:14, c:38, f:1, i:'🫘'},
+  {n:'Pechuga de pollo asada (150 g)', k:250, p:46, c:0, f:6, i:'🍗'},
+  {n:'Arroz rojo (1 taza)', k:230, p:4, c:44, f:4, i:'🍚'},
+  {n:'Aguacate (½ pieza)', k:120, p:1, c:6, f:11, i:'🥑'},
+  {n:'Plátano (1 pieza)', k:105, p:1, c:27, f:0, i:'🍌'},
+  {n:'Manzana (1 pieza)', k:95, p:0, c:25, f:0, i:'🍎'},
+  {n:'Avena con leche (1 taza)', k:300, p:12, c:48, f:6, i:'🥣'},
+  {n:'Quesadilla de queso', k:260, p:11, c:24, f:14, i:'🧀'},
+  {n:'Tamal verde (1 pieza)', k:280, p:7, c:36, f:12, i:'🫔'},
+  {n:'Pozole rojo (1 plato)', k:480, p:30, c:46, f:18, i:'🍲', dish:1},
+  {n:'Chilaquiles verdes con pollo', k:560, p:28, c:58, f:24, i:'🥘', dish:1},
+  {n:'Enchiladas verdes (3)', k:520, p:26, c:50, f:24, i:'🍽', dish:1},
+  {n:'Torta de milanesa', k:690, p:32, c:70, f:30, i:'🥪', dish:1},
+  {n:'Ensalada de nopales', k:90, p:3, c:12, f:4, i:'🥗', dish:1},
+  {n:'Tostada de tinga (1)', k:210, p:12, c:22, f:9, i:'🫓'},
+  {n:'Elote con mayonesa y queso', k:320, p:7, c:38, f:16, i:'🌽'},
+  {n:'Concha (pan dulce)', k:330, p:6, c:52, f:11, i:'🥐'},
+  {n:'Café con leche (taza)', k:90, p:4, c:9, f:4, i:'☕'},
+  {n:'Agua de horchata (vaso)', k:180, p:2, c:40, f:2, i:'🥛'},
+  {n:'Nuez (30 g)', k:200, p:5, c:4, f:20, i:'🌰'},
+  {n:'Yogurt griego natural (170 g)', k:100, p:17, c:6, f:0, i:'🥛', bc:'7501000111223'},
+  {n:'Atún en agua (lata 140 g)', k:130, p:28, c:0, f:1, i:'🐟', bc:'7501000445566'},
+  {n:'Leche entera (250 ml)', k:150, p:8, c:12, f:8, i:'🥛', bc:'7501000778899'},
+  {n:'Coca-Cola (600 ml)', k:252, p:0, c:63, f:0, i:'🥤', bc:'7501055300013'},
+  {n:'Sabritas original (45 g)', k:240, p:3, c:24, f:15, i:'🥔', bc:'7501011101234'},
+  {n:'Gansito (1 pieza)', k:200, p:2, c:28, f:9, i:'🍰', bc:'7501000998877'},
+  {n:'Proteína en polvo (1 scoop)', k:120, p:24, c:3, f:1, i:'🥤', bc:'7501000332211'},
+];
+const ITEMS = [
+  {id:'lentes', n:'Lentes', pr:20, prem:false},
+  {id:'gorra', n:'Gorra', pr:25, prem:false},
+  {id:'bufanda', n:'Bufanda', pr:15, prem:false},
+  {id:'sombrero', n:'Charro', pr:40, prem:true},
+  {id:'corona', n:'Corona', pr:60, prem:true},
+  {id:'capa', n:'Capa', pr:50, prem:true},
+];
+const SLOT = { lentes:'cara', gorra:'cabeza', sombrero:'cabeza', corona:'cabeza', bufanda:'cuello', capa:'espalda' };
+
+/* =============================== estado =============================== */
+const KEY = 'tlacuache-ab-v1';
+const todayStr = d => { const x = d||new Date(); return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'); };
+const addDays = (s,n) => { const [y,m,d]=s.split('-').map(Number); const x=new Date(y,m-1,d+n); return todayStr(x); };
+
+let S = load();
+function fresh(){
+  const s = { variant:'free', day:todayStr(), log:[], coins:0, owned:[], equipped:[], streak:0, steps:0, synced:false, history:{}, range:'hoy', metric:'kcal' };
+  seedHistory(s);
+  return s;
+}
+function load(){
+  try{ const raw = localStorage.getItem(KEY); if(raw){ const s = JSON.parse(raw); if(!s.history||!Object.keys(s.history).length) seedHistory(s); return s; } }catch(e){}
+  return fresh();
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+/* historial de ejemplo (30 días) para que la gráfica premium tenga contenido */
+function seedHistory(s){
+  let seed = 7;
+  const rnd = () => { seed = (seed*9301+49297)%233280; return seed/233280; };
+  s.history = {};
+  for(let i=30;i>=1;i--){
+    const d = addDays(s.day, -i);
+    const good = rnd() < 0.42;
+    const p = Math.round(good ? 110+rnd()*25 : 60+rnd()*50), c = Math.round(good ? 228+rnd()*40 : 140+rnd()*110), f = Math.round(good ? 60+rnd()*12 : 35+rnd()*45);
+    const kcal = good ? Math.round(1850+rnd()*350) : Math.round(1250+rnd()*1350);
+    const met = p>=GOALS.p*.9 && c>=GOALS.c*.9 && f>=GOALS.f*.9 && kcal<=GOALS.kcal*1.15;
+    s.history[d] = { kcal, p, c, f, met, steps: Math.round(3000 + rnd()*9000) };
+  }
+}
+
+/* =============================== cálculos =============================== */
+const isPrem = () => S.variant==='premium';
+function totals(){
+  return S.log.reduce((a,x)=>({k:a.k+x.k,p:a.p+x.p,c:a.c+x.c,f:a.f+x.f}),{k:0,p:0,c:0,f:0});
+}
+function kcalGoal(){ return GOALS.kcal + (isPrem()&&S.synced ? Math.round(S.steps*0.04) : 0); }
+function mood(){
+  const t = totals(); const g = kcalGoal();
+  if(t.k > g*1.15) return 'aletargado';
+  if(t.p>=GOALS.p*.9 && t.c>=GOALS.c*.9 && t.f>=GOALS.f*.9) return 'feliz';
+  return 'hambriento';
+}
+const MOOD = {
+  hambriento:{ t:'Hambriento', d:()=>{ const t=totals(); return t.k? 'Le faltan retos por completar. Sigue registrando.' : 'Aún no le das de comer hoy.'; } },
+  feliz:{ t:'Fuerte y feliz', d:()=>'Completó sus 4 retos. Ya puedes cobrar la moneda.' },
+  aletargado:{ t:'Aletargado', d:()=>'Se pasó de calorías. Mañana es otro día.' },
+};
+
+/* =============================== render =============================== */
+function render(){
+  const t = totals(), m = mood(), prem = isPrem();
+  document.getElementById('coinsHome').textContent = S.coins;
+  document.getElementById('coinsShop').textContent = S.coins;
+  const pill = document.getElementById('planPill');
+  pill.className = 'pill '+(prem?'premium':'free'); pill.textContent = prem?'Premium':'Plan Free';
+  document.getElementById('dateLabel').textContent = fmtDate(S.day);
+  document.getElementById('varA').classList.toggle('on',!prem);
+  document.getElementById('varB').classList.toggle('on',prem);
+  document.getElementById('labDay').textContent = fmtDate(S.day);
+  document.getElementById('labMood').textContent = MOOD[m].t;
+  document.getElementById('labCoins').textContent = S.coins;
+  document.getElementById('labStreak').textContent = S.streak+' día'+(S.streak===1?'':'s');
+
+  // tlacuache
+  const sv = document.getElementById('tlacuache');
+  sv.className.baseVal = 'tlacuache '+m;
+  drawFace(m);
+  document.querySelectorAll('.acc').forEach(g=>g.style.display='none');
+  S.equipped.forEach(id=>{ const g=document.querySelector('.acc-'+id); if(g) g.style.display=''; });
+  const mb = document.getElementById('moodBox'); mb.innerHTML = '<b>'+MOOD[m].t+'</b>'+MOOD[m].d();
+
+  // macros
+  const g = kcalGoal();
+  const rows = [['Calorías',t.k,g,'kcal'],['Proteína',t.p,GOALS.p,'g'],['Carbos',t.c,GOALS.c,'g'],['Grasa',t.f,GOALS.f,'g']];
+  document.getElementById('macros').innerHTML = rows.map(([n,v,go,u])=>{
+    const pct = Math.min(v/go,1), over = u==='kcal' && v>go*1.15; const r=22, C=2*Math.PI*r;
+    return `<div class="macro"><div class="ring">
+      <svg width="54" height="54" viewBox="0 0 54 54"><circle cx="27" cy="27" r="${r}" fill="none" stroke="#F1E7C3" stroke-width="6"/>
+      <circle cx="27" cy="27" r="${r}" fill="none" stroke="${over?'#C7461F':'#1F7A78'}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-pct)}"/></svg>
+      <div class="val">${Math.round(v/go*100)}%</div></div>
+      <div class="name">${n}</div><div class="goal">${Math.round(v)} / ${go} ${u}</div></div>`;
+  }).join('');
+
+  // pasos
+  const sc = document.getElementById('stepsCard');
+  if(prem){
+    sc.innerHTML = S.synced
+      ? `<div style="font-size:30px">👟</div><div style="flex:1"><div class="big">${S.steps.toLocaleString('es-MX')}<small>pasos hoy</small></div><p>Quemaste ~${Math.round(S.steps*0.04)} kcal. Ya se sumaron a tu meta.</p></div><button class="btn small ghost" onclick="syncSteps()">Actualizar</button>`
+      : `<div style="font-size:30px">👟</div><div style="flex:1"><h3>Podómetro</h3><p>Sincroniza los pasos del celular para ajustar tu meta.</p></div><button class="btn small" onclick="syncSteps()">Sincronizar</button>`;
+  } else {
+    sc.innerHTML = `<div style="font-size:30px;filter:grayscale(1);opacity:.6">👟</div><div style="flex:1"><h3>Podómetro</h3><p>Suma tus pasos a la meta de calorías.</p></div><button class="btn small ghost" onclick="openSheet()">🔒 Premium</button>`;
+  }
+
+  // moneda de hoy: los 4 retos, uno por uno
+  const ec = document.getElementById('economyCard');
+  const mult = prem?2:1, prize = 10*mult, limit = Math.round(g*1.15);
+  const need = (n,v,go)=>{ const min=Math.ceil(go*.9), ok=v>=min; return {ok, bad:false, n:'Come suficiente '+n, d:'Llega a '+min+' g', st: ok?'Listo':'Faltan '+Math.ceil(min-v)+' g'}; };
+  const over = t.k>limit;
+  const quests = [ need('proteína',t.p,GOALS.p), need('carbos',t.c,GOALS.c), need('grasa',t.f,GOALS.f),
+    {ok:!over && t.k>0, bad:over, n:'No te pases de calorías', d:'Máximo '+limit.toLocaleString('es-MX')+' kcal', st: over?'Te pasaste':(t.k>0?'Vas bien':'—')} ];
+  const done = quests.filter(q=>q.ok).length, all = done===4;
+  ec.innerHTML = `<div class="quest-h"><h3>Gana tu moneda de hoy</h3><span class="coins"><i class="c"></i>+${prize}</span></div>
+    <p class="lead">${over ? 'Hoy ya no hay moneda: se pasó de calorías. Mañana lo intentas de nuevo.'
+      : all ? '¡Listo! Completaste los 4 retos.'
+      : `Completa los 4 retos registrando lo que comes. Llevas <b>${done} de 4</b>.`}${prem&&!over?' Premium te da el doble.':''}</p>
+    <div class="prog"><i style="width:${done/4*100}%"></i></div>
+    ${quests.map(q=>`<div class="q ${q.bad?'bad':q.ok?'ok':''}"><span class="ck">${q.bad?'✕':'✓'}</span><div class="t"><b>${q.n}</b><span>${q.d}</span></div><span class="st">${q.st}</span></div>`).join('')}
+    ${all ? `<button class="btn gold" onclick="rollover(true)">Terminar el día y cobrar +${prize}</button><p class="foot">Si no la cobras, se te da sola a las 12:00 am.</p>`
+      : over ? `<button class="btn ghost" onclick="rollover(true)">Empezar un día nuevo</button>`
+      : `<button class="btn" onclick="goTab('registro')">Registrar comida</button><p class="foot">Las monedas se gastan en la Tienda.</p>`}`;
+
+  // log
+  const logHtml = S.log.length ? S.log.slice().reverse().map(x=>`<div class="item"><div class="ico">${x.i}</div><div class="t"><b>${x.n}</b><span>${x.time} · P ${x.p} g · C ${x.c} g · G ${x.f} g</span></div><div class="k">${x.k} kcal</div><button class="x" aria-label="Quitar" onclick="removeLog(${x.id})">×</button></div>`).join('')
+    : `<div class="empty">Nada registrado hoy. Ve a <b>Registrar</b> para dar de comer al tlacuache.</div>`;
+  document.getElementById('homeLog').innerHTML = `<div class="h" style="font-size:20px;margin-top:18px">Hoy comió</div>`+logHtml;
+  document.getElementById('regLog').innerHTML = S.log.length ? `<div class="h" style="font-size:20px;margin-top:18px">Registrado hoy</div>`+logHtml : '';
+
+  // foto premium
+  const pw = document.getElementById('photoWay');
+  pw.querySelector('.tag').textContent = prem ? 'Incluido' : 'Premium';
+
+  renderShop(); renderStats(); save();
+}
+
+function fmtDate(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d).toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'}); }
+
+function drawFace(m){
+  const eyes = document.getElementById('eyes'), mouth = document.getElementById('mouth'), body=document.getElementById('body'), belly=document.getElementById('belly');
+  document.getElementById('blush').style.display = m==='feliz'?'':'none';
+  document.getElementById('drop').style.display = m==='hambriento'?'':'none';
+  if(m==='feliz'){
+    eyes.innerHTML = `<circle cx="88" cy="96" r="7" fill="#fff"/><circle cx="132" cy="96" r="7" fill="#fff"/><circle cx="89" cy="97" r="4" fill="#111"/><circle cx="133" cy="97" r="4" fill="#111"/><circle cx="91" cy="94" r="1.5" fill="#fff"/><circle cx="135" cy="94" r="1.5" fill="#fff"/>`;
+    mouth.setAttribute('d','M96 146 q14 14 28 0');
+    body.setAttribute('rx',58); belly.setAttribute('rx',36);
+  } else if(m==='hambriento'){
+    eyes.innerHTML = `<path d="M80 100 a8 6 0 0 1 16 0z" fill="#fff"/><path d="M124 100 a8 6 0 0 1 16 0z" fill="#fff"/><circle cx="88" cy="99" r="3" fill="#111"/><circle cx="132" cy="99" r="3" fill="#111"/><path d="M78 88 l16 6 M142 88 l-16 6" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>`;
+    mouth.setAttribute('d','M98 152 q12 -9 24 0');
+    body.setAttribute('rx',50); belly.setAttribute('rx',28);
+  } else {
+    eyes.innerHTML = `<path d="M80 97 q8 6 16 0" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M124 97 q8 6 16 0" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round"/>`;
+    mouth.setAttribute('d','M101 150 h18');
+    body.setAttribute('rx',68); belly.setAttribute('rx',46);
+  }
+}
+
+/* =============================== tabs =============================== */
+function goTab(t){
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on', v.id==='v-'+t));
+  document.querySelectorAll('.tabbar button').forEach(b=>b.classList.toggle('on', b.dataset.t===t));
+  document.getElementById('content').scrollTop = 0;
+}
+
+/* =============================== registro =============================== */
+function search(q){
+  q = q.trim().toLowerCase();
+  const box = document.getElementById('results');
+  if(!q){ box.innerHTML=''; return; }
+  const norm = s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+  const hits = FOODS.filter(f=>norm(f.n).includes(norm(q))).slice(0,6);
+  box.innerHTML = hits.length ? hits.map(f=>`<button class="r" onclick="addFood(${FOODS.indexOf(f)})"><span class="ico">${f.i}</span><span><b>${f.n}</b><span>P ${f.p} g · C ${f.c} g · G ${f.f} g</span></span><span class="k">${f.k} kcal</span></button>`).join('')
+    : `<div class="empty">No encontramos "${q}". Prueba otro nombre o escanea el código.</div>`;
+}
+function addFood(idx, silent){
+  const f = FOODS[idx]; const now = new Date();
+  S.log.push({ id:Date.now()+Math.random(), n:f.n, k:f.k, p:f.p, c:f.c, f:f.f, i:f.i, time: now.getHours()+':'+String(now.getMinutes()).padStart(2,'0') });
+  const prev = document.getElementById('tlacuache').className.baseVal.split(' ')[1];
+  render();
+  if(!silent){
+    const m = mood();
+    toast(m==='feliz' && prev!=='feliz' ? '¡4 retos completos! Ya puedes cobrar tu moneda.' : m==='aletargado' && prev!=='aletargado' ? 'Uy, se pasó de calorías. Tlacuache aletargado.' : 'Registrado: '+f.n);
+  }
+  document.getElementById('q').value=''; document.getElementById('results').innerHTML='';
+}
+function removeLog(id){ S.log = S.log.filter(x=>x.id!==id); render(); }
+
+/* cámara: escáner y foto */
+let camMode = 'scan', camPick = null;
+function openScanner(){ camMode='scan'; showCam(); }
+function openPhoto(){ if(!isPrem()){ openSheet(); return; } camMode='photo'; showCam(); }
+function showCam(){
+  const cam = document.getElementById('cam'); cam.classList.add('on');
+  document.getElementById('camResult').classList.remove('on');
+  document.getElementById('camDish').textContent=''; document.getElementById('camBar').innerHTML='';
+  const scan = camMode==='scan';
+  document.getElementById('camTitle').textContent = scan?'Escanear código':'Reconocer por foto';
+  document.getElementById('camHint').textContent = scan?'Centra el código de barras dentro del marco.':'Encuadra el plato completo y toma la foto.';
+  document.getElementById('camFrame').className = 'frame'+(scan?'':' photo');
+  document.getElementById('laser').style.display = scan?'':'none';
+  document.getElementById('shutter').style.display = scan?'none':'';
+  // producto/plato que "aparece" frente a la cámara
+  const pool = FOODS.map((f,i)=>({f,i})).filter(x=> scan ? x.f.bc : x.f.dish);
+  camPick = pool[Math.floor(Math.random()*pool.length)];
+  if(scan){
+    const bar = document.getElementById('camBar'); let w='';
+    for(let i=0;i<40;i++){ w += `<i style="width:${1+Math.floor(Math.random()*3)}px;opacity:${Math.random()>.2?1:0}"></i>`; }
+    bar.innerHTML = w;
+    setTimeout(()=>{ if(cam.classList.contains('on') && camMode==='scan') showCamResult('Código '+camPick.f.bc); }, 1700);
+  } else {
+    document.getElementById('camDish').textContent = camPick.f.i;
+  }
+}
+function capture(){ document.getElementById('camHint').textContent='Analizando el plato…'; setTimeout(()=>showCamResult('Reconocido con 92 % de confianza'),1100); }
+function showCamResult(src){
+  const f = camPick.f;
+  const r = document.getElementById('camResult');
+  r.innerHTML = `<span>${src}</span><b>${f.i} ${f.n}</b><span>${f.k} kcal · P ${f.p} g · C ${f.c} g · G ${f.f} g</span>
+    <div class="row"><button class="btn" onclick="addFood(${camPick.i});closeCam()">Agregar</button><button class="btn ghost" onclick="showCam()">Otra vez</button></div>`;
+  r.classList.add('on');
+}
+function closeCam(){ document.getElementById('cam').classList.remove('on'); }
+
+/* =============================== tienda =============================== */
+function renderShop(){
+  const prem = isPrem();
+  const card = it => {
+    const owned = S.owned.includes(it.id), eq = S.equipped.includes(it.id), locked = it.prem && !prem;
+    let btn;
+    if(locked) btn = `<button onclick="openSheet()">🔒 Premium</button>`;
+    else if(eq) btn = `<button class="eq" onclick="toggleEquip('${it.id}')">Puesto ✓</button>`;
+    else if(owned) btn = `<button class="own" onclick="toggleEquip('${it.id}')">Ponérselo</button>`;
+    else btn = `<button onclick="buy('${it.id}')" ${S.coins<it.pr?'disabled':''}>Comprar</button>`;
+    return `<div class="itm ${locked?'locked':''}"><div class="pic">${ICON[it.id]}</div><b>${it.n}</b><div class="pr"><i class="c"></i>${it.pr}</div>${btn}</div>`;
+  };
+  document.getElementById('shopFree').innerHTML = ITEMS.filter(i=>!i.prem).map(card).join('');
+  document.getElementById('shopPrem').innerHTML = ITEMS.filter(i=>i.prem).map(card).join('');
+  document.getElementById('shopUpsell').innerHTML = prem ? '' : `<div class="paywall-inline"><h3>Monedas al doble y accesorios exclusivos</h3><p>Con Premium ganas 20 tlacuacoins por día cumplido y desbloqueas el sombrero de charro, la corona y la capa.</p><button class="btn" onclick="openSheet()">Ver Premium</button></div>`;
+}
+function buy(id){
+  const it = ITEMS.find(x=>x.id===id);
+  if(S.coins<it.pr){ toast('Te faltan '+(it.pr-S.coins)+' tlacuacoins.'); return; }
+  S.coins -= it.pr; S.owned.push(id); toggleEquip(id); toast('¡'+it.n+' comprado y puesto!');
+}
+function toggleEquip(id){
+  if(S.equipped.includes(id)) S.equipped = S.equipped.filter(x=>x!==id);
+  else { S.equipped = S.equipped.filter(x=>SLOT[x]!==SLOT[id]); S.equipped.push(id); }
+  render();
+}
+const ICON = {
+  lentes:`<svg viewBox="0 0 54 54" fill="none" stroke="#1E2A2A" stroke-width="3"><circle cx="16" cy="28" r="10" fill="rgba(31,122,120,.2)"/><circle cx="38" cy="28" r="10" fill="rgba(31,122,120,.2)"/><path d="M26 28h2M6 26l-4-3M48 26l4-3"/></svg>`,
+  gorra:`<svg viewBox="0 0 54 54"><path d="M10 30q17-26 34 0v4q-17-6-34 0z" fill="#0E5E5E"/><path d="M42 31l10 3q-1 5-7 5l-5-2z" fill="#0E5E5E"/><circle cx="27" cy="15" r="3" fill="#F2B33D"/></svg>`,
+  bufanda:`<svg viewBox="0 0 54 54"><path d="M8 22q19 12 38 0v10q-19 12-38 0z" fill="#D62F7A"/><path d="M36 30l6 16 8-3-5-16z" fill="#D62F7A"/><path d="M10 26q17 10 34 0" stroke="#F4A5B8" stroke-width="2.5" fill="none"/></svg>`,
+  sombrero:`<svg viewBox="0 0 54 54"><ellipse cx="27" cy="36" rx="26" ry="7" fill="#1E2A2A"/><path d="M15 36q3-20 12-20t12 20z" fill="#2E3A3A"/><path d="M17 31q10-3 20 0" stroke="#F2B33D" stroke-width="2.5" fill="none"/></svg>`,
+  corona:`<svg viewBox="0 0 54 54"><path d="M10 40V18l9 9 8-14 8 14 9-9v22z" fill="#F2B33D" stroke="#9C6A0C" stroke-width="1.5"/><circle cx="19" cy="20" r="2.5" fill="#D62F7A"/><circle cx="27" cy="14" r="2.5" fill="#0E5E5E"/><circle cx="35" cy="20" r="2.5" fill="#D62F7A"/></svg>`,
+  capa:`<svg viewBox="0 0 54 54"><path d="M14 12q13-8 26 0l6 34q-19 6-38 0z" fill="#D62F7A"/><path d="M18 14q9-5 18 0l4 28q-13 4-26 0z" fill="#F4A5B8" opacity=".6"/></svg>`,
+};
+
+/* =============================== estadísticas =============================== */
+function setRange(r){ S.range=r; renderStats(); }
+function setMetric(m){ S.metric=m; renderStats(); }
+function renderStats(){
+  const prem = isPrem(), r = S.range;
+  document.querySelectorAll('#statsSeg button').forEach(b=>b.classList.toggle('on',b.dataset.r===r));
+  const body = document.getElementById('statsBody');
+  document.getElementById('statsSub').textContent = r==='hoy' ? 'Lo que llevas hoy. Se reinicia a las 12:00 am.' : r==='semana' ? 'Últimos 7 días.' : 'Últimos 30 días.';
+  if(r==='hoy'){
+    const t = totals(), g = kcalGoal();
+    const rows = [['Calorías',t.k,g,'kcal'],['Proteína',t.p,GOALS.p,'g'],['Carbos',t.c,GOALS.c,'g'],['Grasa',t.f,GOALS.f,'g']];
+    body.innerHTML = `<div class="card today">`+rows.map(([n,v,go,u])=>`<div class="bar-row"><span class="n">${n}</span><div class="track"><div class="fill ${u==='kcal'&&v>go*1.15?'over':''}" style="width:${Math.min(v/go,1)*100}%"></div></div><span class="v">${Math.round(v)}/${go} ${u}</span></div>`).join('')+`</div>
+      <div class="reset-note">⏱ Tu tlacuache está <b>&nbsp;${MOOD[mood()].t.toLowerCase()}</b>. Lo de hoy desaparece a las 12:00 am.</div>`
+      + (prem ? '' : `<div class="paywall-inline"><h3>¿Y la semana pasada?</h3><p>Premium guarda tu historial semanal y mensual con gráfica.</p><button class="btn" onclick="openSheet()">Ver Premium</button></div>`);
+    return;
+  }
+  const n = r==='semana'?7:30;
+  const days = []; for(let i=n-1;i>=0;i--){ const d = addDays(S.day,-i); days.push({d, v: i===0 ? dayRecord() : (S.history[d]||{kcal:0,p:0,c:0,f:0,met:false}) }); }
+  const M = { kcal:['Calorías','kcal',GOALS.kcal], p:['Proteína','g',GOALS.p], c:['Carbos','g',GOALS.c], f:['Grasa','g',GOALS.f] };
+  const met = days.filter(x=>x.v.met).length;
+  const avg = Math.round(days.reduce((a,x)=>a+(x.v[S.metric]||0),0)/n);
+  const chart = buildChart(days, S.metric, M[S.metric]);
+  body.innerHTML = `<div class="segc mini">${Object.keys(M).map(k=>`<button class="${S.metric===k?'on':''}" onclick="setMetric('${k}')">${M[k][0]}</button>`).join('')}</div>
+    <div class="chart-wrap ${prem?'':'blur-chart'}">${chart}<div class="tip" id="tip"></div></div>
+    <div class="kpis ${prem?'':'blur-chart'}"><div class="kpi"><div class="v">${avg.toLocaleString('es-MX')}</div><div class="l">Promedio de ${M[S.metric][0].toLowerCase()}</div></div><div class="kpi"><div class="v">${met}/${n}</div><div class="l">Días cumplidos</div></div><div class="kpi"><div class="v">${met*10*(prem?2:1)}</div><div class="l">Tlacuacoins ganadas</div></div></div>`
+    + (prem ? '' : `<div class="paywall-inline"><h3>Historial con gráfica</h3><p>La variante Free solo ve el día actual. Activa Premium para ver semana y mes.</p><button class="btn" onclick="openSheet()">Ver Premium</button></div>`);
+  if(prem) wireTips(days, M[S.metric]);
+}
+function dayRecord(){ const t=totals(); return {kcal:t.k,p:t.p,c:t.c,f:t.f,met:mood()==='feliz',steps:S.steps}; }
+function buildChart(days, key, meta){
+  const W=350, H=204, L=36, R=8, T=16, B=44, n=days.length;
+  const goal = meta[2]; const max = Math.max(goal*1.3, ...days.map(x=>x.v[key]||0))*1.05;
+  const y = v=>T+(H-T-B)*(1-v/max); const bw = (W-L-R)/n; const barW = Math.max(4, bw-2);
+  const ticks = [0, Math.round(max/2), Math.round(max)].map(v=>`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#EAD9A3" stroke-width="1"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="#8A9696">${v>=1000?Math.round(v/100)/10+'k':v}</text>`).join('');
+  const bars = days.map((x,i)=>{
+    const v = x.v[key]||0, x0 = L+i*bw+(bw-barW)/2, y0 = y(v), h = Math.max(0, y(0)-y0);
+    const rr = Math.min(4, barW/2, h);
+    const path = h>0 ? `M${x0} ${y(0)} V${y0+rr} a${rr} ${rr} 0 0 1 ${rr} -${rr} H${x0+barW-rr} a${rr} ${rr} 0 0 1 ${rr} ${rr} V${y(0)} Z` : '';
+    const lbl = n===7 ? ['D','L','M','M','J','V','S'][new Date(x.d+'T12:00').getDay()] : (i%5===0||i===n-1 ? String(Number(x.d.slice(-2))) : '');
+    return `<g class="b" data-i="${i}"><rect x="${x0-1}" y="${T}" width="${barW+2}" height="${H-T-B}" fill="transparent"/><path d="${path}" fill="${x.v.met?'#1F7A78':'#9DBDB5'}"/><text x="${x0+barW/2}" y="${H-B+14}" text-anchor="middle" font-size="10" fill="#8A9696">${lbl}</text></g>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${meta[0]} por día">${ticks}${bars}
+    <line x1="${L}" x2="${W-R}" y1="${y(goal)}" y2="${y(goal)}" stroke="#D62F7A" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <rect x="${L+3}" y="${y(goal)-14}" width="58" height="13" rx="4" fill="#FFFBEC" opacity=".9"/><text x="${L+6}" y="${y(goal)-4}" font-size="10" font-weight="700" fill="#A3185A">Meta ${goal}</text>
+    <line x1="${L}" x2="${W-R}" y1="${y(0)}" y2="${y(0)}" stroke="#C9B98A"/>
+    <g transform="translate(${L},${H-3})"><rect width="9" height="9" rx="2" fill="#1F7A78" y="-8"/><text x="13" font-size="10" fill="#4C5B5B">Día cumplido</text><rect x="92" width="9" height="9" rx="2" fill="#9DBDB5" y="-8"/><text x="105" font-size="10" fill="#4C5B5B">No cumplido</text></g>
+  </svg>`;
+}
+function wireTips(days, meta){
+  const wrap = document.querySelector('.chart-wrap'), tip = document.getElementById('tip'), svg = wrap.querySelector('svg');
+  svg.querySelectorAll('g.b').forEach(g=>{
+    const show = e=>{
+      const i=+g.dataset.i, x=days[i]; const rect = g.querySelector('path').getBBox(); const pt = svg.createSVGPoint(); pt.x = rect.x+rect.width/2; pt.y = rect.y; const sp = pt.matrixTransform(svg.getScreenCTM()); const wr = wrap.getBoundingClientRect();
+      tip.innerHTML = `<b>${fmtDate(x.d)}</b>${meta[0]}: ${Math.round(x.v[S.metric]||0)} ${meta[1]}<br>${x.v.met?'✓ Día cumplido':'Sin cumplir'}`;
+      tip.style.left=(sp.x-wr.left)+'px'; tip.style.top=(sp.y-wr.top-6)+'px'; tip.style.display='block';
+    };
+    g.addEventListener('mouseenter',show); g.addEventListener('touchstart',show,{passive:true});
+    g.addEventListener('mouseleave',()=>tip.style.display='none');
+  });
+}
+
+/* =============================== premium / pasos =============================== */
+function openSheet(){ document.getElementById('sheetBg').classList.add('on'); document.getElementById('sheet').classList.add('on'); }
+function closeSheet(){ document.getElementById('sheetBg').classList.remove('on'); document.getElementById('sheet').classList.remove('on'); }
+function subscribe(){ closeSheet(); setVariant('premium'); toast('Premium activado. Ya eres variante B.'); }
+function setVariant(v){ S.variant=v; if(v==='free'){ S.synced=false; S.equipped = S.equipped.filter(id=>!ITEMS.find(i=>i.id===id).prem); } render(); }
+function syncSteps(){
+  const btn = event && event.target; if(btn){ btn.textContent='Sincronizando…'; btn.disabled=true; }
+  setTimeout(()=>{ S.steps = S.synced ? S.steps + 300 + Math.floor(Math.random()*900) : 4000 + Math.floor(Math.random()*7000); S.synced=true; render(); toast('Pasos sincronizados: '+S.steps.toLocaleString('es-MX')); }, 900);
+}
+
+/* =============================== día / recompensa =============================== */
+function rollover(simulated){
+  const rec = dayRecord(); S.history[S.day] = rec;
+  const mult = isPrem()?2:1;
+  if(rec.met){ S.coins += 10*mult; S.streak += 1; } else { S.streak = 0; }
+  const wasMet = rec.met, earned = 10*mult;
+  S.day = simulated ? addDays(S.day,1) : todayStr();
+  S.log = []; S.steps = 0; S.synced = false;
+  render();
+  if(wasMet){ document.getElementById('rewardAmt').textContent = '+'+earned; document.getElementById('rewardTxt').textContent = isPrem() ? 'Retos cumplidos. Premium duplicó tu moneda. Gástala en la Tienda.' : 'Tu tlacuache comió justo lo que necesitaba. Gasta tus monedas en la Tienda.'; document.getElementById('reward').classList.add('on'); }
+  else if(simulated) toast('Nuevo día. Ayer no se cumplieron los macros, sin moneda.');
+}
+function closeReward(){ document.getElementById('reward').classList.remove('on'); }
+const DEMO_DAY = ['Avena con leche','Huevos revueltos','Pechuga de pollo','Arroz rojo','Frijoles','Tacos al pastor','Aguacate','Yogurt griego','Plátano','Proteína en polvo','Tortilla','Manzana'];
+function fillDemo(){
+  S.log = [];
+  DEMO_DAY.forEach(n=>{ const i = FOODS.findIndex(f=>f.n.startsWith(n)); if(i>=0) addFood(i,true); });
+  render(); toast('Día de ejemplo registrado.'); goTab('home');
+}
+function resetAll(){ localStorage.removeItem(KEY); S = fresh(); render(); goTab('home'); toast('Datos reiniciados.'); }
+
+/* =============================== panel de demo (teléfono) =============================== */
+function openLab(){ document.getElementById('lab').classList.add('on'); }
+function closeLab(){ document.getElementById('lab').classList.remove('on'); }
+// en el teléfono, cualquier acción del panel lo cierra para ver el resultado en la app
+document.getElementById('lab').addEventListener('click', e=>{ if(e.target.closest('.seg button, .acts button')) closeLab(); });
+
+// funciona sin internet una vez instalada (solo aplica con https o localhost)
+if('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost')){
+  window.addEventListener('load', ()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+
+/* =============================== util =============================== */
+let toastT;
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('on'),2200); }
+function tickClock(){ const d=new Date(); document.getElementById('clock').textContent = d.getHours()+':'+String(d.getMinutes()).padStart(2,'0'); }
+tickClock(); setInterval(tickClock, 15000);
+
+// al abrir: si el día guardado ya pasó, cierra el día real (12:00 am)
+if(S.day < todayStr()) rollover(false); else render();
+
+// atajos por URL para demos: ?variant=premium&demo=1&tab=stats&range=semana
+(function(){
+  const u = new URLSearchParams(location.search);
+  if(u.get('variant')) setVariant(u.get('variant'));
+  if(u.get('demo')){ S.log=[]; DEMO_DAY.forEach(n=>{ const i=FOODS.findIndex(f=>f.n.startsWith(n)); if(i>=0) addFood(i,true); }); }
+  if(u.get('coins')) { S.coins = +u.get('coins'); }
+  if(u.get('steps')) { S.steps = +u.get('steps'); S.synced = true; }
+  if(u.get('range')) S.range = u.get('range');
+  render();
+  if(u.get('tab')) goTab(u.get('tab'));
+  if(u.get('cam')==='scan') openScanner(); if(u.get('cam')==='photo') openPhoto();
+  if(u.get('sheet')) openSheet();
+})();
+</script>
+</body>
+</html>
